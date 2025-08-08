@@ -2,6 +2,7 @@ import streamlit as st
 import fitz  # PyMuPDF
 import io
 
+# Chuyển màu integer sang tuple RGB (0-1)
 def int_to_rgb_tuple(color_int):
     r = ((color_int >> 16) & 255) / 255
     g = ((color_int >> 8) & 255) / 255
@@ -9,7 +10,7 @@ def int_to_rgb_tuple(color_int):
     return (r, g, b)
 
 st.set_page_config(page_title="PDF Text Replace", page_icon="📝")
-st.title("🔄 Thay thế văn bản trong PDF (giữ size & màu chữ)")
+st.title("🔄 Thay thế văn bản trong PDF (giữ vị trí, size & màu chữ)")
 
 uploaded_file = st.file_uploader("📄 Tải file PDF", type=["pdf"])
 old_text = st.text_input("Chuỗi cần thay thế", value="VIETCARE MADRID 2018 S.L")
@@ -34,17 +35,19 @@ if uploaded_file and old_text and new_text:
                                     page.add_redact_annot(rect, fill=(1, 1, 1))
                                 page.apply_redactions()
 
-                                # Ghi chữ mới với size & màu gốc (RGB)
+                                # Viết chữ mới vào đúng vùng cũ, căn trái
                                 for rect in rects:
-                                    page.insert_text(
-                                        rect.tl,
+                                    page.insert_textbox(
+                                        rect,
                                         span["text"].replace(old_text, new_text),
                                         fontsize=span["size"],
-                                        fontname="helv",
-                                        color=int_to_rgb_tuple(span["color"])
+                                        fontname="helv",  # Font chuẩn để tránh lỗi
+                                        color=int_to_rgb_tuple(span["color"]),
+                                        align=0  # 0 = căn trái
                                     )
                                     replace_count += 1
 
+        # Xuất PDF mới ra bộ nhớ
         output_bytes = io.BytesIO()
         doc.save(output_bytes)
         doc.close()
