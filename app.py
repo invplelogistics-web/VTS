@@ -31,19 +31,22 @@ if uploaded_file and old_text and new_text:
                             if old_text in span["text"]:
                                 rects = page.search_for(span["text"])
                                 for rect in rects:
+                                    # Mở rộng vùng rect để tránh cắt chữ
+                                    new_rect = fitz.Rect(
+                                        rect.x0 - 1, rect.y0 - 0.5,
+                                        rect.x1 + 2, rect.y1 + 1
+                                    )
                                     # Che chữ cũ
-                                    page.add_redact_annot(rect, fill=(1, 1, 1))
-                                page.apply_redactions()
-
-                                # Viết chữ mới vào đúng vùng cũ, căn trái
-                                for rect in rects:
+                                    page.add_redact_annot(new_rect, fill=(1, 1, 1))
+                                    page.apply_redactions()
+                                    # Viết chữ mới
                                     page.insert_textbox(
-                                        rect,
+                                        new_rect,
                                         span["text"].replace(old_text, new_text),
                                         fontsize=span["size"],
-                                        fontname="helv",  # Font chuẩn để tránh lỗi
+                                        fontname="helv",
                                         color=int_to_rgb_tuple(span["color"]),
-                                        align=0  # 0 = căn trái
+                                        align=0  # căn trái
                                     )
                                     replace_count += 1
 
